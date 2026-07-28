@@ -6,11 +6,18 @@
   hosts: k3s_servers
   become: true
   tasks:
+    # 부팅 직후 cloud-init이 백그라운드에서 apt-get을 돌리는 것과 경쟁하는 것을 방지
+    - name: Wait for cloud-init to finish
+      ansible.builtin.command: cloud-init status --wait
+      changed_when: false
+      failed_when: false
+
     - name: Install QEMU Guest Agent
       ansible.builtin.apt:
         name: qemu-guest-agent
         state: present
         update_cache: yes
+        lock_timeout: 300
 
     - name: Enable and start QEMU Guest Agent
       ansible.builtin.systemd:
@@ -82,6 +89,7 @@
       ansible.builtin.apt:
         name: python3-kubernetes
         state: present
+        lock_timeout: 300
 
     # CoreDNS 조건부 포워딩 설정
     - name: Configure CoreDNS Conditional Forwarding via coredns-custom
