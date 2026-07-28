@@ -3,6 +3,10 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   name: letsencrypt-dns01
+  annotations:
+    # cert-manager-webhook이 Healthy 상태가 된 뒤(0단계 완료 후)에 적용되도록 지연
+    # 안 하면 webhook 파드가 아직 준비 안 된 상태에서 검증 호출이 실패할 수 있음
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
