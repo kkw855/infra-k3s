@@ -11,7 +11,7 @@ spec:
   instances: 3 # 인스턴스 3개를 지정하면 자동으로 HA(고가용성) 구조가 완성됩니다.
 
   # 사용할 PostgreSQL 버전 이미지
-  imageName: ghcr.io/cloudnative-pg/postgresql:16.2
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
 
   # 최초 부팅 시 admin role을 생성하기 위한 용도. 이 DB 자체는 프로젝트에서 쓰지 않고,
   # 실제 프로젝트별 DB는 전부 database-*.yaml (Database CR)로 별도 관리
