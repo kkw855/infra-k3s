@@ -1,0 +1,13 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: notes-db-kotlin
+  namespace: postgres
+  annotations:
+    # Cluster(wave 1)가 실제로 Healthy(부트스트랩 완료)된 뒤에 생성되도록 지연
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  name: notes_db_kotlin
+  owner: admin
+  cluster:
+    name: postgres

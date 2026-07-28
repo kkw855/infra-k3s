@@ -1,0 +1,36 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: postgres
+  annotations:
+    # CNPG 오퍼레이터(webhook 포함)가 Healthy 해진 뒤에 적용되도록 지연
+    # 안 하면 오퍼레이터 파드가 아직 준비 안 된 상태에서 검증 호출이 실패할 수 있음 (cert-manager와 동일한 이유)
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  instances: 3 # 인스턴스 3개를 지정하면 자동으로 HA(고가용성) 구조가 완성됩니다.
+
+  # 사용할 PostgreSQL 버전 이미지
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.2
+
+  # 최초 부팅 시 admin role을 생성하기 위한 용도. 이 DB 자체는 프로젝트에서 쓰지 않고,
+  # 실제 프로젝트별 DB는 전부 database-*.yaml (Database CR)로 별도 관리
+  bootstrap:
+    initdb:
+      database: admin_bootstrap
+      owner: admin     # DB 소유자(유저) 이름 - 이후 모든 Database CR이 이 role을 owner로 재사용
+      # Note: 비밀번호 설정을 생략하면 CNPG가 아주 안전한 임의의 비밀번호를 자동 생성합니다.
+
+  # 스토리지(디스크) 설정
+  storage:
+    size: 10Gi
+    storageClass: "local-path"
+
+  # 가벼운 CRUD용 컨테이너 리소스 제한
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1"
