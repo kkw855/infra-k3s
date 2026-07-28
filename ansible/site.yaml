@@ -1,0 +1,129 @@
+---
+# --------------------------------------------------
+# Phase 1: OS 사전 준비 및 디스크 구성 (All Nodes)
+# --------------------------------------------------
+- name: Prepare OS Environment and Mount Storage
+  hosts: k3s_servers
+  become: true
+  tasks:
+    - name: Install QEMU Guest Agent
+      ansible.builtin.apt:
+        name: qemu-guest-agent
+        state: present
+        update_cache: yes
+
+    - name: Enable and start QEMU Guest Agent
+      ansible.builtin.systemd:
+        name: qemu-guest-agent
+        state: started
+        enabled: true
+
+    # K3s 3대 노드 모두에서 IPv6 비활성화
+    - name: Disable IPv6 via sysctl
+      ansible.builtin.sysctl:
+        name: "{{ item }}"
+        value: '1'
+        state: present
+        reload: yes
+        sysctl_file: /etc/sysctl.d/99-disable-ipv6.conf
+      loop:
+        - net.ipv6.conf.all.disable_ipv6
+        - net.ipv6.conf.default.disable_ipv6
+        - net.ipv6.conf.lo.disable_ipv6
+
+    - name: Format second disk (/dev/sdb) as ext4
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/sdb
+
+    - name: Create local-path storage directory
+      ansible.builtin.file:
+        path: /var/lib/rancher/k3s/storage
+        state: directory
+        mode: '0755'
+
+    - name: Mount /dev/sdb to /var/lib/rancher/k3s/storage and configure fstab
+      ansible.posix.mount:
+        path: /var/lib/rancher/k3s/storage
+        src: /dev/sdb   # Ansible이 자동으로 UUID를 감지하여 fstab에 UUID=... 형태로 등록함!
+        fstype: ext4
+        opts: defaults,noatime
+        state: mounted
+
+# --------------------------------------------------
+# Phase 2: K3s HA Cluster Bootstrap (First Server)
+# --------------------------------------------------
+- name: Bootstrap First K3s Server Node
+  hosts: k3s_servers[0]
+  become: true
+  tasks:
+    - name: Check if K3s is already installed
+      ansible.builtin.stat:
+        path: /usr/local/bin/k3s
+      register: k3s_binary
+
+    - name: Install First K3s Server with --cluster-init
+      ansible.builtin.shell: >
+        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" INSTALL_K3S_EXEC="server \
+          --cluster-init \
+          --token {{ k3s_token }} \
+          --disable traefik \
+          --disable servicelb" sh -s -
+      when: not k3s_binary.stat.exists
+
+    - name: Wait for K3s API server to be ready
+      ansible.builtin.wait_for:
+        port: 6443
+        delay: 5
+        timeout: 300
+
+    # ⬇️ [추가] CoreDNS 모듈 실행에 필요한 Python 라이브러리 설치 ⬇️
+    - name: Install python3-kubernetes library
+      ansible.builtin.apt:
+        name: python3-kubernetes
+        state: present
+
+    # CoreDNS 조건부 포워딩 설정
+    - name: Configure CoreDNS Conditional Forwarding via coredns-custom
+      kubernetes.core.k8s:
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: coredns-custom
+            namespace: kube-system
+          data:
+            end-soul.server: |
+              end-soul.com:53 {
+                  forward . 10.10.60.1
+              }
+      register: coredns_cm
+
+    - name: Restart CoreDNS Deployment to apply configuration
+      ansible.builtin.command: kubectl rollout restart deployment coredns -n kube-system
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      when: coredns_cm.changed
+
+# --------------------------------------------------
+# Phase 3: K3s HA Cluster Join (Secondary Servers)
+# --------------------------------------------------
+- name: Join Remaining K3s Server Nodes
+  hosts: k3s_servers[1:]
+  become: true
+  tasks:
+    - name: Check if K3s is already installed
+      ansible.builtin.stat:
+        path: /usr/local/bin/k3s
+      register: k3s_binary
+
+    - name: Join Secondary K3s Servers
+      ansible.builtin.shell: >
+        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" INSTALL_K3S_EXEC="server \
+          --server https://{{ hostvars[groups['k3s_servers'][0]]['ansible_host'] }}:6443 \
+          --token {{ k3s_token }} \
+          --disable traefik \
+          --disable servicelb" sh -s -
+      when: not k3s_binary.stat.exists

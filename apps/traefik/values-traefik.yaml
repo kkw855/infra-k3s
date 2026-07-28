@@ -1,0 +1,20 @@
+service:
+  type: LoadBalancer
+  # annotations:
+  #   metallb.universe.tf/address-pool: <pool-name>
+
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+
+ports:
+  web:
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    http:
+      tls:
+        enabled: true

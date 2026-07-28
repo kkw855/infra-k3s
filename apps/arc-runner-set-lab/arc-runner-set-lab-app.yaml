@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arc-runner-set-lab
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
+      targetRevision: 0.14.2
+      helm:
+        valueFiles:
+          - $values/apps/arc-runner-set-lab/values-arc-runner-set-lab.yaml
+    - repoURL: https://github.com/kkw855/infra-k3s.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/kkw855/infra-k3s.git
+      targetRevision: main
+      path: apps/arc-runner-set-lab/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-systems
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

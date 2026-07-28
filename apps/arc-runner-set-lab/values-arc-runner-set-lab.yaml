@@ -1,0 +1,6 @@
+containerMode:
+  type: dind
+githubConfigUrl: https://github.com/kkw855/fullstack-notes-lab
+# 토큰은 값이 아니라 시크릿 "이름"만 참조 (Variation C: pre-defined secret)
+# arc-systems 네임스페이스에 이 이름으로 Secret이 존재해야 하며, key는 github_token 이어야 함
+githubConfigSecret: github-api-token-secret

@@ -1,0 +1,14 @@
+configs:
+  params:
+    server.insecure: true   # TLS는 Traefik(Ingress) 쪽에서 종료
+
+server:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hostname: argocd.end-soul.com
+    tls: true
+    # cert-manager 있다면:
+    annotations:
+      # ClusterIssuer 에 metadata.name 동일하게 설정
+      cert-manager.io/cluster-issuer: letsencrypt-dns01
