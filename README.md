@@ -26,10 +26,14 @@ ansible-playbook -i inventory.ini site.yaml
 
 ## 로컬 kubectl config 설정
 ```shell
+mkdir -p ~/.kube
+
 ssh -i ~/IdeaProjects/terraform-key.pem ubuntu@10.10.60.101 "sudo cat /etc/rancher/k3s/k3s.yaml" > ~/.kube/config
 
-# macOS 전용 sed 명령어로 IP 치환
-sed -i ~/IdeaProjects/terraform-key.pem 's/127.0.0.1/10.10.60.101/g' ~/.kube/config
+# macOS(BSD) sed는 -i 뒤에 백업 확장자가 필요 (안 쓸 거면 빈 문자열 '')
+sed -i '' 's/127.0.0.1/10.10.60.101/g' ~/.kube/config
+
+chmod 600 ~/.kube/config
 ```
 
 # 재설치 시 수동으로 해야 하는 것 (의존성 순서대로)
