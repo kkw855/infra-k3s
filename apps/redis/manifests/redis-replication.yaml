@@ -1,0 +1,50 @@
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisReplication
+metadata:
+  name: redis
+  namespace: redis
+spec:
+  clusterSize: 3
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.15
+    imagePullPolicy: IfNotPresent
+    service:
+      serviceType: ClusterIP
+    # 비밀번호는 값이 아니라 기존 Secret 참조 (SealedSecret으로 별도 관리)
+    redisSecret:
+      name: redis-auth
+      key: password
+  podSecurityContext:
+    runAsUser: 1000
+    fsGroup: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: local-path
+  redisExporter:
+    enabled: false
+  # 워커 노드 3대에 고르게 분산 배치 (기존 Bitnami의 podAntiAffinityPreset: hard 와 동일한 효과)
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - redis
+          topologyKey: "kubernetes.io/hostname"
+  # Sentinel 기반 자동 failover (기존 sentinel.enabled: true, quorum 2 와 동일한 목적)
+  sentinel:
+    image: quay.io/opstree/redis-sentinel:v7.0.15
+    imagePullPolicy: IfNotPresent
+    size: 3
+    parallelSyncs: "1"
+    failoverTimeout: "10000"
+    downAfterMilliseconds: "5000"
+    resolveHostnames: "no"
+    announceHostnames: "no"
