@@ -27,6 +27,7 @@ spec:
         storageClassName: local-path
   redisExporter:
     enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0 # enabled: false여도 CRD 스키마상 필수 필드
   # 워커 노드 3대에 고르게 분산 배치 (기존 Bitnami의 podAntiAffinityPreset: hard 와 동일한 효과)
   affinity:
     podAntiAffinity:
