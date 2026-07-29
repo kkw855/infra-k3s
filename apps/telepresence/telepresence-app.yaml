@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: telepresence
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: ghcr.io/telepresenceio
+    chart: telepresence
+    targetRevision: 2.31.1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ambassador
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
