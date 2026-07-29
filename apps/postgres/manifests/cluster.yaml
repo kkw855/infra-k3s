@@ -19,7 +19,8 @@ spec:
     initdb:
       database: admin_bootstrap
       owner: admin     # DB 소유자(유저) 이름 - 이후 모든 Database CR이 이 role을 owner로 재사용
-      # Note: 비밀번호 설정을 생략하면 CNPG가 아주 안전한 임의의 비밀번호를 자동 생성합니다.
+      secret:
+        name: postgres-auth   # SealedSecret으로 관리 - 재설치해도 비밀번호 고정
 
   # 스토리지(디스크) 설정
   storage:
