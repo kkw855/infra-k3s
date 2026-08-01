@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minio
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.min.io/
+      chart: minio
+      targetRevision: 5.4.0
+      helm:
+        valueFiles:
+          - $values/apps/minio/values-minio.yaml
+    - repoURL: https://github.com/kkw855/infra-k3s.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/kkw855/infra-k3s.git
+      targetRevision: main
+      path: apps/minio/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: minio
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

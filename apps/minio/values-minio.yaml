@@ -1,0 +1,23 @@
+# 단일 인스턴스(standalone)로 시작. 나중에 필요해지면 mode: distributed +
+# replicas/drivesPerNode 늘려서 멀티노드로 전환 가능.
+mode: standalone
+
+# 비밀번호는 값이 아니라 기존 Secret 참조 (SealedSecret으로 별도 관리) - Postgres/Redis와 동일한 패턴
+existingSecret: minio-auth
+
+persistence:
+  enabled: true
+  storageClass: local-path
+  size: 50Gi
+
+# 실습용이라 차트 기본값(16Gi 요청)은 과함
+resources:
+  requests:
+    memory: 512Mi
+
+# Postgres/Redis와 동일하게 외부 노출 없이 클러스터 내부(ClusterIP)에서만 접근.
+# 콘솔 UI가 필요하면 telepresence connect 후 minio-console 서비스로 접속.
+ingress:
+  enabled: false
+consoleIngress:
+  enabled: false
