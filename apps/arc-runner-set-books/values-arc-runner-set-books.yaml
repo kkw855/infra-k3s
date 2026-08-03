@@ -1,0 +1,11 @@
+containerMode:
+  type: dind
+githubConfigUrl: https://github.com/kkw855/spring-boot-microservices-scala
+# ArgoCD가 helm template으로 렌더링할 때는 클러스터 조회(lookup)가 안 되므로
+# 컨트롤러의 ServiceAccount를 자동 탐지 못 함 -> 명시적으로 지정
+controllerServiceAccount:
+  namespace: arc-systems
+  name: arc-controller-gha-rs-controller
+# 토큰은 값이 아니라 시크릿 "이름"만 참조 (Variation C: pre-defined secret)
+# arc-systems 네임스페이스에 이 이름으로 Secret이 존재해야 하며, key는 github_token 이어야 함
+githubConfigSecret: github-api-token-secret

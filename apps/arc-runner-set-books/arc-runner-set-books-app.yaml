@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arc-runner-set-books
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set
+      targetRevision: 0.14.2
+      helm:
+        valueFiles:
+          - $values/apps/arc-runner-set-books/values-arc-runner-set-books.yaml
+    - repoURL: https://github.com/kkw855/infra-k3s.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-systems
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
