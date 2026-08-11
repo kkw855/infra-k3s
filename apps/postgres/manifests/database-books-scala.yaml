@@ -7,7 +7,7 @@ metadata:
     # Cluster(wave 1)가 실제로 Healthy(부트스트랩 완료)된 뒤에 생성되도록 지연
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  name: books-db-scala
+  name: books_db_scala
   owner: admin
   cluster:
     name: postgres
