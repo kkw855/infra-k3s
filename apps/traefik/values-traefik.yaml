@@ -1,7 +1,7 @@
 service:
-  type: LoadBalancer
-  # annotations:
-  #   metallb.universe.tf/address-pool: <pool-name>
+  spec:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
 
 ingressClass:
   enabled: true

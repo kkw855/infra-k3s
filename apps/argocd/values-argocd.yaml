@@ -8,7 +8,19 @@ server:
     ingressClassName: traefik
     hostname: argocd.end-soul.com
     tls: true
-    # cert-manager 있다면:
     annotations:
-      # ClusterIssuer 에 metadata.name 동일하게 설정
       cert-manager.io/cluster-issuer: letsencrypt-dns01
+      traefik.ingress.kubernetes.io/router.middlewares: argocd-internal-only@kubernetescrd
+
+# 내부 대역에서만 ArgoCD 접근 허용 (notes-* Ingress에는 영향 없음)
+extraObjects:
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: internal-only
+    spec:
+      ipAllowList:
+        sourceRange:
+          - 192.168.1.0/24          # LAN (집에서 접속)
+          - 10.10.60.0/24           # K3s VLAN60
+          - 10.11.11.0/24           # WireGuard 대역
