@@ -1,0 +1,7 @@
+containerMode:
+  type: dind
+githubConfigUrl: https://github.com/kkw855/obsidian-llm-wiki
+githubConfigSecret: github-api-token-secret
+controllerServiceAccount:
+  namespace: arc-systems
+  name: arc-controller-gha-rs-controller
