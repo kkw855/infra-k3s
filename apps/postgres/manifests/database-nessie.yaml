@@ -1,0 +1,12 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: nessie-db
+  namespace: postgres
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  name: nessie
+  owner: admin
+  cluster:
+    name: postgres

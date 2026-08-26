@@ -21,3 +21,8 @@ ingress:
   enabled: false
 consoleIngress:
   enabled: false
+
+buckets:
+  - name: local-lakehouse
+    policy: none
+    purge: false
