@@ -8,7 +8,10 @@ existingSecret: minio-auth
 persistence:
   enabled: true
   storageClass: local-path
-  size: 50Gi
+  # local-path 는 allowVolumeExpansion=false 라 확장이 안 된다.
+  # 크기를 바꾸려면 PVC 삭제 후 재생성해야 하므로, 비어 있을 때 넉넉히 잡는다.
+  # TPC-DS sf100 이 Iceberg Parquet 으로 30~40GB + 파티셔닝 실험 복사본 + 스냅샷
+  size: 150Gi
 
 # 실습용이라 차트 기본값(16Gi 요청)은 과함
 resources:
